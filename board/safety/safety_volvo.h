@@ -47,6 +47,7 @@ float volvo_speed = 0;
 
 // platform eucd
 // msg ids
+/*
 #define MSG_FSM0_VOLVO_V60 0x51  // ACC status message
 #define MSG_FSM1_VOLVO_V60 0x260
 #define MSG_FSM2_VOLVO_V60 0x262 // LKA steering message
@@ -56,7 +57,7 @@ float volvo_speed = 0;
 #define MSG_PSCM1_VOLVO_V60 0x246
 #define MSG_ACC_PEDAL_VOLVO_V60 0x20 // Gas pedal
 #define MSG_BTNS_VOLVO_V60 0x127     // Steering wheel buttons
-
+*/
 // safety params
 const float DEG_TO_CAN_VOLVO_C1 = 1/0.04395;            // 22.75312855517634‬, inverse of dbc scaling
 const int VOLVO_MAX_DELTA_OFFSET_ANGLE = 20/0.04395-1;  // max degrees divided by k factor in dbc 0.04395. -1 to give a little safety margin. 
@@ -141,7 +142,7 @@ const int ALLOWED_MSG_C1[] = {
 0x764,    // Diagnostic messages 
 0x7df,    // Diagnostic messages
 }; */
-
+/*
 const int ALLOWED_MSG_EUCD[] = {
 0x10, // SAS
 0x20,
@@ -214,10 +215,10 @@ const int ALLOWED_MSG_EUCD[] = {
 0x764, // Diagnostic messages
 0x7df, // Diagnostic messages
 };
-
+*/
 
 //const int ALLOWED_MSG_C1_LEN = sizeof(ALLOWED_MSG_C1) / sizeof(ALLOWED_MSG_C1[0]);
-const int ALLOWED_MSG_EUCD_LEN = sizeof(ALLOWED_MSG_EUCD) / sizeof(ALLOWED_MSG_EUCD[0]);
+//const int ALLOWED_MSG_EUCD_LEN = sizeof(ALLOWED_MSG_EUCD) / sizeof(ALLOWED_MSG_EUCD[0]);
 
 // TX checks
 // platform c1
@@ -233,6 +234,7 @@ const CanMsg VOLVO_C1_TX_MSGS[] = { {MSG_FSM0_VOLVO_C1, 0, 8}, {MSG_FSM1_VOLVO_C
 
 const int VOLVO_C1_TX_MSGS_LEN = sizeof(VOLVO_C1_TX_MSGS) / sizeof(VOLVO_C1_TX_MSGS[0]);
 // platform eucd
+/*
 const CanMsg VOLVO_EUCD_TX_MSGS[] = { {MSG_FSM0_VOLVO_V60, 0, 8}, {MSG_FSM1_VOLVO_V60, 0, 8},
                                        {MSG_FSM2_VOLVO_V60, 0, 8}, {MSG_FSM3_VOLVO_V60, 0, 8},
                                        {MSG_FSM4_VOLVO_V60, 0, 8}, {MSG_FSM5_VOLVO_V60, 0, 8},
@@ -243,7 +245,7 @@ const CanMsg VOLVO_EUCD_TX_MSGS[] = { {MSG_FSM0_VOLVO_V60, 0, 8}, {MSG_FSM1_VOLV
                                        {MSG_DIAG_BROADCAST, 0, 8}, {MSG_DIAG_BROADCAST, 2, 8},
                                     };
 const int VOLVO_EUCD_TX_MSGS_LEN = sizeof(VOLVO_EUCD_TX_MSGS) / sizeof(VOLVO_EUCD_TX_MSGS[0]);
-
+*/
 // expected_timestep in microseconds between messages.
 AddrCheckStruct volvo_c1_checks[] = {
   {.msg = {{MSG_FSM0_VOLVO_C1,       2, 8, .check_checksum = false, .expected_timestep = 10000U}}},
@@ -252,18 +254,18 @@ AddrCheckStruct volvo_c1_checks[] = {
   {.msg = {{MSG_PSCM1_VOLVO_C1,      0, 8, .check_checksum = false, .expected_timestep = 20000U}}},
   {.msg = {{MSG_ACC_PEDAL_VOLVO_C1,  0, 8, .check_checksum = false, .expected_timestep = 20000U}}},
 };
-
+/*
 AddrCheckStruct volvo_eucd_checks[] = {
   {.msg = {{MSG_PSCM1_VOLVO_V60,     0, 8, .check_checksum = false, .expected_timestep = 20000U}}},
   {.msg = {{MSG_FSM0_VOLVO_V60,      2, 8, .check_checksum = false, .expected_timestep = 10000U}}},
   {.msg = {{MSG_ACC_PEDAL_VOLVO_V60, 0, 8, .check_checksum = false, .expected_timestep = 10000U}}},
 };
-
+*/
 #define VOLVO_C1_RX_CHECKS_LEN sizeof(volvo_c1_checks) / sizeof(volvo_c1_checks[0])
-#define VOLVO_EUCD_RX_CHECKS_LEN sizeof(volvo_eucd_checks) / sizeof(volvo_eucd_checks[0])
+//#define VOLVO_EUCD_RX_CHECKS_LEN sizeof(volvo_eucd_checks) / sizeof(volvo_eucd_checks[0])
 
 addr_checks volvo_c1_rx_checks = {volvo_c1_checks, VOLVO_C1_RX_CHECKS_LEN};
-addr_checks volvo_eucd_rx_checks = {volvo_eucd_checks, VOLVO_EUCD_RX_CHECKS_LEN};
+//addr_checks volvo_eucd_rx_checks = {volvo_eucd_checks, VOLVO_EUCD_RX_CHECKS_LEN};
 
 // Check for value in a array
 /* static int val_in_arr(int val, const int arr[], const int arr_len) {
@@ -285,7 +287,7 @@ static const addr_checks* volvo_c1_init(uint16_t param) {
   giraffe_forward_camera_volvo = 0;
   return &volvo_c1_rx_checks;
 }
-
+/*
 static const addr_checks* volvo_eucd_init(uint16_t param) {
   UNUSED(param);
   controls_allowed = 0;
@@ -293,12 +295,11 @@ static const addr_checks* volvo_eucd_init(uint16_t param) {
   giraffe_forward_camera_volvo = 0;
   return &volvo_eucd_rx_checks;
 }
-
+*/
 
 static int volvo_c1_rx_hook(CANPacket_t *to_push) {
 
-  bool valid = addr_safety_check(to_push, &volvo_c1_rx_checks,
-                                 NULL, NULL, NULL);
+  bool valid = addr_safety_check(to_push, &volvo_c1_rx_checks, NULL, NULL, NULL, NULL);
 
   if( valid ) {
     int bus = GET_BUS(to_push);
@@ -390,7 +391,7 @@ static int volvo_c1_rx_hook(CANPacket_t *to_push) {
 }
 
 
-static int volvo_eucd_rx_hook(CANPacket_t *to_push) {
+/*static int volvo_eucd_rx_hook(CANPacket_t *to_push) {
 
   bool valid = addr_safety_check(to_push, &volvo_eucd_rx_checks,
                                  NULL, NULL, NULL);
@@ -426,7 +427,7 @@ static int volvo_eucd_rx_hook(CANPacket_t *to_push) {
     }
   }
   return valid;
-}
+}*/
 
 
 static int volvo_c1_tx_hook(CANPacket_t *to_send) {
@@ -496,8 +497,7 @@ static int volvo_c1_tx_hook(CANPacket_t *to_send) {
   return tx;
 }
 
-
-static int volvo_eucd_tx_hook(CANPacket_t *to_send) {
+/*static int volvo_eucd_tx_hook(CANPacket_t *to_send) {
 
   //int bus = GET_BUS(to_send);
   //int addr = GET_ADDR(to_send);
@@ -509,7 +509,7 @@ static int volvo_eucd_tx_hook(CANPacket_t *to_send) {
   }
 
   return tx;
-}
+}*/
 
 
 static int volvo_c1_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
@@ -539,7 +539,7 @@ static int volvo_c1_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
 }
 
 
-static int volvo_eucd_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
+/*static int volvo_eucd_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
 
   int bus_fwd = -1; // fallback to do not forward
   int addr = GET_ADDR(to_fwd);
@@ -547,7 +547,7 @@ static int volvo_eucd_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
   if( !relay_malfunction && giraffe_forward_camera_volvo ) {
     if( bus_num == 0 ){
       bool block_msg = (addr == MSG_PSCM1_VOLVO_V60);
-      //bool allw_msg = val_in_arr(addr, ALLOWED_MSG_EUCD, ALLOWED_MSG_EUCD_LEN); // block not relevant msgs
+      bool allw_msg = val_in_arr(addr, ALLOWED_MSG_EUCD, ALLOWED_MSG_EUCD_LEN); // block not relevant msgs
       bus_fwd = block_msg ? -1 : 2;  // forward bus 0 -> 2
     }
 
@@ -559,7 +559,7 @@ static int volvo_eucd_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
     }
   }
   return bus_fwd;
-}
+}*/
 
 
 const safety_hooks volvo_c1_hooks = {
@@ -570,7 +570,7 @@ const safety_hooks volvo_c1_hooks = {
   .fwd = volvo_c1_fwd_hook,
 };
 
-
+/*
 const safety_hooks volvo_eucd_hooks = {
   .init = volvo_eucd_init,
   .rx = volvo_eucd_rx_hook,
@@ -578,3 +578,4 @@ const safety_hooks volvo_eucd_hooks = {
   .tx_lin = nooutput_tx_lin_hook,
   .fwd = volvo_eucd_fwd_hook,
 };
+*/
