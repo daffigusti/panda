@@ -72,7 +72,7 @@ static int wuling_rx_hook(CANPacket_t *to_push)
     {
       bool cruise_available = GET_BIT(to_push, 38U);
       if (!cruise_available) {
-        lateral_controls_allowed = false;
+        // lateral_controls_allowed = false;
       }
 
       bool cruise_engaged = GET_BIT(to_push, 21U) != 0U;
