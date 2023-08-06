@@ -8,7 +8,7 @@ from panda.tests.hitl.helpers import clear_can_buffers
 
 NO_JUNGLE = os.environ.get("NO_JUNGLE", "0") == "1"
 if not NO_JUNGLE:
-  from panda_jungle import PandaJungle  # pylint: disable=import-error
+  from panda import PandaJungle
 
 
 SPEED_NORMAL = 500
@@ -74,6 +74,9 @@ def init_jungle():
   _panda_jungle.set_harness_orientation(PandaJungle.HARNESS_ORIENTATION_1)
   for bus, speed in BUS_SPEEDS:
     _panda_jungle.set_can_speed_kbps(bus, speed)
+
+  # ensure FW hasn't changed
+  assert _panda_jungle.up_to_date()
 
 
 def pytest_configure(config):
