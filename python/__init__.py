@@ -427,7 +427,7 @@ class Panda:
           if device.getVendorID() == 0xbbaa and device.getProductID() in cls.USB_PIDS:
             try:
               serial = device.getSerialNumber()
-              if len(serial) == 24:
+              if len(serial) == 24 or serial == "pedal":
                 ret.append(serial)
               else:
                 logging.warning(f"found device with panda descriptors but invalid serial: {serial}", RuntimeWarning)
@@ -476,11 +476,7 @@ class Panda:
         success = True
         break
       except Exception:
-        try:
-          dfu = PandaDFU(self.get_dfu_serial())
-          dfu.recover()
-        except Exception:
-          pass
+        pass
       time.sleep(0.1)
     if not success:
       raise Exception("reconnect failed")
@@ -773,13 +769,6 @@ class Panda:
 
   def enable_deepsleep(self):
     self._handle.controlWrite(Panda.REQUEST_OUT, 0xfb, 0, 0, b'')
-
-  def set_esp_power(self, on):
-    self._handle.controlWrite(Panda.REQUEST_OUT, 0xd9, int(on), 0, b'')
-
-  def esp_reset(self, bootmode=0):
-    self._handle.controlWrite(Panda.REQUEST_OUT, 0xda, int(bootmode), 0, b'')
-    time.sleep(0.2)
 
   def set_safety_mode(self, mode=SAFETY_SILENT, param=0):
     self._handle.controlWrite(Panda.REQUEST_OUT, 0xdc, mode, param, b'')
