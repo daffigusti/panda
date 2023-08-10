@@ -1,9 +1,10 @@
+import binascii
 import pytest
 import random
 from unittest.mock import patch
 
 from panda import Panda
-from panda.python.spi import PandaSpiNackResponse
+from panda.python.spi import PandaProtocolMismatch, PandaSpiNackResponse
 
 pytestmark = [
   pytest.mark.test_panda_types((Panda.HW_TYPE_TRES, ))
@@ -16,6 +17,33 @@ class TestSpi:
     panda.health()
     assert spy.call_count == 2
     mocker.stop(spy)
+
+  @pytest.mark.expected_logs(2)
+  def test_protocol_version_check(self, p):
+    for bootstub in (False, True):
+      p.reset(enter_bootstub=bootstub)
+      with patch('panda.python.spi.PandaSpiHandle.PROTOCOL_VERSION', return_value="abc"):
+        # list should still work with wrong version
+        assert p._serial in Panda.list()
+
+        # connect but raise protocol error
+        with pytest.raises(PandaProtocolMismatch):
+          Panda(p._serial)
+
+  @pytest.mark.expected_logs(2)
+  def test_protocol_version_data(self, p):
+    for bootstub in (False, True):
+      p.reset(enter_bootstub=bootstub)
+      v = p._handle.get_protocol_version()
+
+      uid = binascii.hexlify(v[:12]).decode()
+      assert uid == p.get_uid()
+
+      hwtype = v[12]
+      assert hwtype == ord(p.get_type())
+
+      bstub = v[13]
+      assert bstub == (0xEE if bootstub else 0xCC)
 
   def test_all_comm_types(self, mocker, p):
     spy = mocker.spy(p._handle, '_wait_for_ack')
@@ -48,11 +76,11 @@ class TestSpi:
     for _ in range(10):
       ep = random.randint(4, 20)
       with pytest.raises(PandaSpiNackResponse):
-        p._handle.bulkRead(ep, random.randint(1, 1000), timeout=50)
+        p._handle.bulkRead(ep, random.randint(1, 1000), timeout=35)
 
       self._ping(mocker, p)
 
       with pytest.raises(PandaSpiNackResponse):
-        p._handle.bulkWrite(ep, b"abc", timeout=50)
+        p._handle.bulkWrite(ep, b"abc", timeout=35)
 
       self._ping(mocker, p)
