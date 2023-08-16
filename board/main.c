@@ -244,6 +244,11 @@ void tick_handler(void) {
       }
 
       if (!heartbeat_disabled) {
+
+        puth(heartbeat_disabled);
+        print("\n");
+        puth(heartbeat_counter);
+        print("\n");
         // if the heartbeat has been gone for a while, go to SILENT safety mode and enter power save
         if (heartbeat_counter >= (check_started() ? HEARTBEAT_IGNITION_CNT_ON : HEARTBEAT_IGNITION_CNT_OFF)) {
           print("device hasn't sent a heartbeat for 0x");

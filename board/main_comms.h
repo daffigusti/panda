@@ -435,6 +435,7 @@ int comms_control_handler(ControlPacket_t *req, uint8_t *resp) {
     // **** 0xf3: Heartbeat. Resets heartbeat counter.
     case 0xf3:
       {
+        print("Heartbeat. Resets heartbeat counter.\n");
         heartbeat_counter = 0U;
         heartbeat_lost = false;
         heartbeat_disabled = false;
