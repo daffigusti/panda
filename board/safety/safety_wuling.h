@@ -14,17 +14,17 @@
 #define BUS_CAM 2
 
 const SteeringLimits WULING_STEERING_LIMITS = {
-    .max_steer = 800,
-    .max_rate_up = 10,
-    .max_rate_down = 25,
-    .max_rt_delta = 300,
-    .max_rt_interval = 250000,
-    .driver_torque_factor = 1,
-    .driver_torque_allowance = 15,
-    .type = TorqueDriverLimited,
+  .max_steer = 300,
+  .max_rate_up = 10,
+  .max_rate_down = 15,
+  .driver_torque_allowance = 65,
+  .driver_torque_factor = 4,
+  .max_rt_delta = 128,
+  .max_rt_interval = 250000,
+  .type = TorqueDriverLimited,
 };
 
-const CanMsg WULING_TX_MSGS[] = {{STEERING_LKAS, 0, 8}};
+const CanMsg WULING_TX_MSGS[] = {{STEERING_LKAS, 0, 8}, {CRZ_BTN, 0, 8}, {LKAS_HUD, 0, 8}};
 
 AddrCheckStruct wuling_addr_checks[] = {
     {.msg = {{CRZ_BTN, 0, 8, .expected_timestep = 50000U}, {0}, {0}}},
@@ -44,13 +44,15 @@ static int wuling_rx_hook(CANPacket_t *to_push)
   {
     int addr = GET_ADDR(to_push);
 
+    //speed data
     if (addr == 840)
     {
       // sample speed: scale by 0.01 to get kph
-      int speed = (GET_BYTE(to_push, 0)) | GET_BYTE(to_push, 1);
+      int speed = (GET_BYTE(to_push, 0) << 8) | GET_BYTE(to_push, 1);
       vehicle_moving = speed > 10; // moving when speed > 0.1 kph
     }
 
+    //torque driver data
     if (addr == 485)
     {
       int torque_driver_new = GET_BYTE(to_push, 6);
@@ -58,30 +60,33 @@ static int wuling_rx_hook(CANPacket_t *to_push)
       update_sample(&torque_driver, torque_driver_new);
     }
 
+    //brake data
     if (addr == 201)
     {
       brake_pressed = GET_BIT(to_push, 40U) != 0U;
     }
 
-    if (addr == 0x191)
+    //gas data
+    if (addr == 401)
     {
       gas_pressed = GET_BYTE(to_push, 6) != 0U;
     }
 
-    if ((addr == 0x263))
+    //cruize data
+    if ((addr == 611))
     {
-      bool cruise_available = GET_BIT(to_push, 38U);
+      bool cruise_available = (GET_BYTE(to_push, 4) >> 6) & 1U;
       if (!cruise_available) {
         // lateral_controls_allowed = false;
       }
 
-      bool cruise_engaged = GET_BIT(to_push, 21U) != 0U;
+      bool cruise_engaged = (GET_BYTE(to_push, 2) >> 5) & 1U;
       pcm_cruise_check(cruise_engaged);
     }
 
     generic_rx_checks((addr == STEERING_LKAS));
   }
-  controls_allowed =1;
+  // controls_allowed =1;
   return valid;
 }
 
