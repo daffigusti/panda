@@ -14,11 +14,11 @@
 #define BUS_CAM 2
 
 const SteeringLimits WULING_STEERING_LIMITS = {
-  .max_steer = 300,
-  .max_rate_up = 10,
-  .max_rate_down = 15,
-  .driver_torque_allowance = 65,
-  .driver_torque_factor = 4,
+  .max_steer = 200,
+  .max_rate_up = 3,
+  .max_rate_down = 2,
+  .driver_torque_allowance = 35,
+  .driver_torque_factor = 2,
   .max_rt_delta = 128,
   .max_rt_interval = 250000,
   .type = TorqueDriverLimited,
@@ -109,27 +109,31 @@ static int wuling_tx_hook(CANPacket_t *to_send)
     // steer cmd checks
     if (addr == STEERING_LKAS)
     {
-      // int desired_torque = (((GET_BYTE(to_send, 0) & 0x0FU) << 8) | GET_BYTE(to_send, 1)) - 2048U;
+       int desired_torque = ((GET_BYTE(to_send, 0) & 0x7U) << 8) + GET_BYTE(to_send, 1);
+       desired_torque = to_signed(desired_torque, 11);
 
-      // if (steer_torque_cmd_checks(desired_torque, -1, WULING_STEERING_LIMITS))
-      // {
-      //   tx = 0;
-      // }
+       bool steer_req = (GET_BIT(to_send, 5U) != 0U);
+        if (steer_torque_cmd_checks(desired_torque, steer_req, WULING_STEERING_LIMITS)) {
+          tx = 0;
+        }
     }
 
     // // cruise buttons check
-    // if (addr == WULING_CRZ_BTNS)
-    // {
-    //   // allow resume spamming while controls allowed, but
-    //   // only allow cancel while contrls not allowed
-    //   bool cancel_cmd = (GET_BYTE(to_send, 0) == 0x1U);
-    //   if (!controls_allowed && !cancel_cmd)
-    //   {
-    //     tx = 0;
-    //   }
-    // }
+    if (addr == CRZ_BTN)
+    {
+      // allow resume spamming while controls allowed, but
+      // only allow cancel while contrls not allowed
+      int button = (GET_BYTE(to_send, 0) >> 2) & 0x15U;
+
+      bool cancel_cmd = (button == 8) && cruise_engaged_prev;
+      if (!controls_allowed && !cancel_cmd)
+      {
+        tx = 0;
+      }
+    }
   }
 
+  // 1 allows the message through
   return tx;
 }
 
