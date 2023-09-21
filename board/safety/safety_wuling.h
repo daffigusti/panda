@@ -113,7 +113,7 @@ static int wuling_tx_hook(CANPacket_t *to_send)
        desired_torque = to_signed(desired_torque, 11);
 
        bool steer_req = (GET_BIT(to_send, 5U) != 0U);
-        if (steer_torque_cmd_checks(desired_torque, steer_req, WULrING_STEERING_LIMITS)) {
+        if (steer_torque_cmd_checks(desired_torque, steer_req, WULING_STEERING_LIMITS)) {
           tx = 0;
         }
     }
