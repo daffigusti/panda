@@ -109,13 +109,13 @@ static int wuling_tx_hook(CANPacket_t *to_send)
     // steer cmd checks
     if (addr == STEERING_LKAS)
     {
-       int desired_torque = ((GET_BYTE(to_send, 0) & 0x7U) << 8) + GET_BYTE(to_send, 1);
-       desired_torque = to_signed(desired_torque, 11);
+      //  int desired_torque = ((GET_BYTE(to_send, 0) & 0x7U) << 8) + GET_BYTE(to_send, 1);
+      //  desired_torque = to_signed(desired_torque, 11);
 
-       bool steer_req = (GET_BIT(to_send, 5U) != 0U);
-        if (steer_torque_cmd_checks(desired_torque, steer_req, WULING_STEERING_LIMITS)) {
-          tx = 0;
-        }
+      //  bool steer_req = (GET_BIT(to_send, 5U) != 0U);
+      //   if (steer_torque_cmd_checks(desired_torque, steer_req, WULING_STEERING_LIMITS)) {
+      //     // tx = 0;
+      //   }
     }
 
     // // cruise buttons check
@@ -123,13 +123,13 @@ static int wuling_tx_hook(CANPacket_t *to_send)
     {
       // allow resume spamming while controls allowed, but
       // only allow cancel while contrls not allowed
-      int button = (GET_BYTE(to_send, 0) >> 2) & 0x15U;
+      // int button = (GET_BYTE(to_send, 0) >> 2) & 0x15U;
 
-      bool cancel_cmd = (button == 8) && cruise_engaged_prev;
-      if (!controls_allowed && !cancel_cmd)
-      {
-        tx = 0;
-      }
+      // bool cancel_cmd = (button == 8) && cruise_engaged_prev;
+      // if (!controls_allowed && !cancel_cmd)
+      // {
+      //   // tx = 0;
+      // }
     }
   }
 
