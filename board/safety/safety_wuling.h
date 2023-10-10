@@ -14,14 +14,14 @@
 #define BUS_CAM 2
 
 const SteeringLimits WULING_STEERING_LIMITS = {
-    .max_steer = 800,
-    .max_rate_up = 10,
-    .max_rate_down = 25,
-    .max_rt_delta = 300,
-    .max_rt_interval = 250000,
-    .driver_torque_factor = 1,
-    .driver_torque_allowance = 15,
-    .type = TorqueDriverLimited,
+  .max_steer = 200,
+  .max_rate_up = 3,
+  .max_rate_down = 2,
+  .driver_torque_allowance = 35,
+  .driver_torque_factor = 2,
+  .max_rt_delta = 128,
+  .max_rt_interval = 250000,
+  .type = TorqueDriverLimited,
 };
 
 const CanMsg WULING_TX_MSGS[] = {{STEERING_LKAS, 0, 8}, {CRZ_BTN, 0, 8}, {LKAS_HUD, 0, 8}};
@@ -44,13 +44,15 @@ static int wuling_rx_hook(CANPacket_t *to_push)
   {
     int addr = GET_ADDR(to_push);
 
+    //speed data
     if (addr == 840)
     {
       // sample speed: scale by 0.01 to get kph
-      int speed = (GET_BYTE(to_push, 0)) | GET_BYTE(to_push, 1);
+      int speed = (GET_BYTE(to_push, 0) << 8) | GET_BYTE(to_push, 1);
       vehicle_moving = speed > 10; // moving when speed > 0.1 kph
     }
 
+    //torque driver data
     if (addr == 485)
     {
       int torque_driver_new = GET_BYTE(to_push, 6);
@@ -58,24 +60,33 @@ static int wuling_rx_hook(CANPacket_t *to_push)
       update_sample(&torque_driver, torque_driver_new);
     }
 
+    //brake data
     if (addr == 201)
     {
       brake_pressed = GET_BIT(to_push, 40U) != 0U;
     }
 
-    if (addr == 0x191)
+    //gas data
+    if (addr == 401)
     {
       gas_pressed = GET_BYTE(to_push, 6) != 0U;
     }
 
-    if ((addr == 0x263))
+    //cruize data
+    if ((addr == 611))
     {
-      bool cruise_engaged = GET_BIT(to_push, 38U) != 0U;
+      bool cruise_available = (GET_BYTE(to_push, 4) >> 6) & 1U;
+      if (!cruise_available) {
+        // lateral_controls_allowed = false;
+      }
+
+      bool cruise_engaged = (GET_BYTE(to_push, 2) >> 5) & 1U;
       pcm_cruise_check(cruise_engaged);
     }
 
     generic_rx_checks((addr == STEERING_LKAS));
   }
+  // controls_allowed =1;
   return valid;
 }
 
@@ -98,27 +109,31 @@ static int wuling_tx_hook(CANPacket_t *to_send)
     // steer cmd checks
     if (addr == STEERING_LKAS)
     {
-      // int desired_torque = (((GET_BYTE(to_send, 0) & 0x0FU) << 8) | GET_BYTE(to_send, 1)) - 2048U;
+      //  int desired_torque = ((GET_BYTE(to_send, 0) & 0x7U) << 8) + GET_BYTE(to_send, 1);
+      //  desired_torque = to_signed(desired_torque, 11);
 
-      // if (steer_torque_cmd_checks(desired_torque, -1, WULING_STEERING_LIMITS))
-      // {
-      //   tx = 0;
-      // }
+      //  bool steer_req = (GET_BIT(to_send, 5U) != 0U);
+      //   if (steer_torque_cmd_checks(desired_torque, steer_req, WULING_STEERING_LIMITS)) {
+      //     // tx = 0;
+      //   }
     }
 
     // // cruise buttons check
-    // if (addr == WULING_CRZ_BTNS)
-    // {
-    //   // allow resume spamming while controls allowed, but
-    //   // only allow cancel while contrls not allowed
-    //   bool cancel_cmd = (GET_BYTE(to_send, 0) == 0x1U);
-    //   if (!controls_allowed && !cancel_cmd)
-    //   {
-    //     tx = 0;
-    //   }
-    // }
+    if (addr == CRZ_BTN)
+    {
+      // allow resume spamming while controls allowed, but
+      // only allow cancel while contrls not allowed
+      // int button = (GET_BYTE(to_send, 0) >> 2) & 0x15U;
+
+      // bool cancel_cmd = (button == 8) && cruise_engaged_prev;
+      // if (!controls_allowed && !cancel_cmd)
+      // {
+      //   // tx = 0;
+      // }
+    }
   }
 
+  // 1 allows the message through
   return tx;
 }
 
