@@ -75,13 +75,15 @@ static int wuling_rx_hook(CANPacket_t *to_push)
     //cruize data
     if ((addr == 611))
     {
-      bool cruise_available = (GET_BYTE(to_push, 4) >> 6) & 1U;
+      bool cruise_available = (GET_BYTE(to_push, 4) >> 6) != 0U;
       if (!cruise_available) {
         // lateral_controls_allowed = false;
       }
 
-      bool cruise_engaged = (GET_BYTE(to_push, 2) >> 5) & 1U;
-      pcm_cruise_check(cruise_available || cruise_engaged);
+      bool cruise_status = (GET_BYTE(to_push, 2) >> 5) != 0U;
+      bool cruise_engaged = cruise_status || cruise_available;
+
+      pcm_cruise_check(cruise_engaged);
     }
 
     generic_rx_checks((addr == STEERING_LKAS));
