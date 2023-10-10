@@ -81,7 +81,7 @@ static int wuling_rx_hook(CANPacket_t *to_push)
       }
 
       bool cruise_engaged = (GET_BYTE(to_push, 2) >> 5) & 1U;
-      pcm_cruise_check(cruise_engaged);
+      pcm_cruise_check(cruise_available || cruise_engaged);
     }
 
     generic_rx_checks((addr == STEERING_LKAS));
