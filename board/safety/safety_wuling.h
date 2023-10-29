@@ -7,6 +7,7 @@
 #define GAS_DATA 0x191
 #define CRZ_BTN 0x1e1
 #define CRZ_CTRL 0x370
+#define ACC_CMD 0x260
 
 // CAN bus numbers
 #define BUS_MAIN 0
@@ -28,7 +29,6 @@ const CanMsg WULING_TX_MSGS[] = {{STEERING_LKAS, 0, 8}, {CRZ_BTN, 0, 8}, {LKAS_H
 
 AddrCheckStruct wuling_addr_checks[] = {
     {.msg = {{CRZ_BTN, 0, 8, .expected_timestep = 50000U}, {0}, {0}}},
-    {.msg = {{CRZ_CTRL, 0, 8, .expected_timestep = 20000U}, {0}, {0}}},
     {.msg = {{ENGINE_DATA, 0, 8, .expected_timestep = 100000U}, {0}, {0}}},
     {.msg = {{BRAKE_DATA, 0, 8, .expected_timestep = 50000U}, {0}, {0}}},
     {.msg = {{GAS_DATA, 0, 8, .expected_timestep = 50000U}, {0}, {0}}},
@@ -88,7 +88,7 @@ static int wuling_rx_hook(CANPacket_t *to_push)
 
     generic_rx_checks((addr == STEERING_LKAS));
   }
-  // controls_allowed =1;
+  controls_allowed = true;
   return valid;
 }
 
@@ -149,7 +149,9 @@ static int wuling_fwd_hook(int bus, int addr)
   }
   else if (bus == BUS_CAM)
   {
-    bool block = (addr == STEERING_LKAS);
+    // bool block = (addr == STEERING_LKAS) || (addr == ACC_CMD);
+    bool is_lkas_msg = (addr == LKAS_HUD);
+    bool block = (addr == STEERING_LKAS) || is_lkas_msg;
     if (!block)
     {
       bus_fwd = BUS_MAIN;
