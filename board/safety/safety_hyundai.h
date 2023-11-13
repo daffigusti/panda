@@ -182,7 +182,7 @@ static int hyundai_rx_hook(CANPacket_t *to_push) {
 
   if (valid && (bus == 0)) {
     if (addr == 0x251) {
-      int torque_driver_new = ((GET_BYTES(to_push, 0, 4) & 0x7ffU) * 0.79) - 808; // scale down new driver torque signal to match previous one
+      int torque_driver_new = (GET_BYTES(to_push, 0, 2) & 0x7ffU) - 1024U;
       // update array of samples
       update_sample(&torque_driver, torque_driver_new);
     }
@@ -212,7 +212,7 @@ static int hyundai_rx_hook(CANPacket_t *to_push) {
     }
 
     if (addr == 0x394) {
-      brake_pressed = GET_BIT(to_push, 55U) != 0U;
+      brake_pressed = ((GET_BYTE(to_push, 5) >> 5U) & 0x2U) == 0x2U;
     }
 
     bool stock_ecu_detected = (addr == 0x340);
