@@ -26,7 +26,7 @@ const SteeringLimits WULING_STEERING_LIMITS = {
   .type = TorqueDriverLimited,
 };
 
-const CanMsg WULING_TX_MSGS[] = {{STEERING_LKAS, 0, 8}, {CRZ_BTN, 0, 8}, {LKAS_HUD, 0, 8}, {ACC_STS, 0, 8}, {ACC_CMD, 0, 8}, {CRZ_CTRL, 0, 8}};
+const CanMsg WULING_TX_MSGS[] = {{STEERING_LKAS, 0, 8}, {CRZ_BTN, 0, 8}, {LKAS_HUD, 0, 8}, {CRZ_CTRL, 0, 8}, {CRZ_CTRL, 2, 8}, {ACC_STS, 0, 8}, {ACC_CMD, 0, 8}};
 
 AddrCheckStruct wuling_addr_checks[] = {
     {.msg = {{CRZ_BTN, 0, 8, .expected_timestep = 50000U}, {0}, {0}}},
@@ -146,14 +146,17 @@ static int wuling_fwd_hook(int bus, int addr)
 
   if (bus == BUS_MAIN)
   {
-    bus_fwd = BUS_CAM;
+    bool block_msg = (addr == CRZ_BTN);
+    if (!block_msg) {
+      bus_fwd = BUS_CAM;
+    }
   }
   else if (bus == BUS_CAM)
   {
     // bool block = (addr == STEERING_LKAS) || (addr == ACC_CMD);
     bool is_lkas_msg = (addr == LKAS_HUD);
-    // bool is_acc_md = (addr == ACC_CMD);
-    bool block = (addr == STEERING_LKAS) || is_lkas_msg || (addr == CRZ_CTRL);
+    bool is_acc_md = (addr == ACC_CMD);
+    bool block = (addr == STEERING_LKAS) || is_lkas_msg || (addr == CRZ_CTRL) || is_acc_md; 
     if (!block)
     {
       bus_fwd = BUS_MAIN;
