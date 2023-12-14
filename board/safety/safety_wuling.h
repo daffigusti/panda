@@ -146,7 +146,7 @@ static int wuling_fwd_hook(int bus, int addr)
 
   if (bus == BUS_MAIN)
   {
-    bool block_msg = (addr == CRZ_BTN);
+    bool block_msg = (addr == 00);
     if (!block_msg) {
       bus_fwd = BUS_CAM;
     }
