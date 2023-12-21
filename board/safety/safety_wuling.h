@@ -26,7 +26,7 @@ const SteeringLimits WULING_STEERING_LIMITS = {
   .type = TorqueDriverLimited,
 };
 
-const CanMsg WULING_TX_MSGS[] = {{STEERING_LKAS, 0, 8}, {CRZ_BTN, 0, 8}, {LKAS_HUD, 0, 8}, {CRZ_CTRL, 0, 8}, {CRZ_CTRL, 2, 8}, {ACC_STS, 0, 8}, {ACC_CMD, 0, 8}};
+const CanMsg WULING_TX_MSGS[] = {{STEERING_LKAS, 0, 8}, {CRZ_BTN, 0, 8}, {CRZ_BTN, 2, 8},  {LKAS_HUD, 0, 8}, {CRZ_CTRL, 0, 8}, {CRZ_CTRL, 2, 8}, {ACC_STS, 0, 8}, {ACC_CMD, 0, 8}};
 
 AddrCheckStruct wuling_addr_checks[] = {
     {.msg = {{CRZ_BTN, 0, 8, .expected_timestep = 50000U}, {0}, {0}}},
