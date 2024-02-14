@@ -1,5 +1,4 @@
 // CAN msgs we care about
-
 #define ENGINE_DATA 0xc9
 #define LKAS_HUD 0x373
 #define STEERING_LKAS 0x225
@@ -28,20 +27,17 @@ const SteeringLimits WULING_STEERING_LIMITS = {
 
 const CanMsg WULING_TX_MSGS[] = {{STEERING_LKAS, 0, 8}, {CRZ_BTN, 0, 8}, {CRZ_BTN, 2, 8},  {LKAS_HUD, 0, 8}, {CRZ_CTRL, 0, 8}, {CRZ_CTRL, 2, 8}, {ACC_STS, 0, 8}, {ACC_CMD, 0, 8}};
 
-AddrCheckStruct wuling_addr_checks[] = {
-    {.msg = {{CRZ_BTN, 0, 8, .expected_timestep = 50000U}, {0}, {0}}},
-    {.msg = {{ENGINE_DATA, 0, 8, .expected_timestep = 100000U}, {0}, {0}}},
-    {.msg = {{BRAKE_DATA, 0, 8, .expected_timestep = 50000U}, {0}, {0}}},
-    {.msg = {{GAS_DATA, 0, 8, .expected_timestep = 50000U}, {0}, {0}}},
+RxCheck wuling_rx_checks[] = {
+    {.msg = {{CRZ_BTN, 0, 8, .frequency = 50U}, {0}, {0}}},
+    {.msg = {{ENGINE_DATA, 0, 8, .frequency = 100U}, {0}, {0}}},
+    {.msg = {{BRAKE_DATA, 0, 8, .frequency = 50U}, {0}, {0}}},
+    {.msg = {{GAS_DATA, 0, 8, .frequency = 50U}, {0}, {0}}},
 };
-#define WULING_ADDR_CHECKS_LEN (sizeof(wuling_addr_checks) / sizeof(wuling_addr_checks[0]))
-addr_checks wuling_rx_checks = {wuling_addr_checks, WULING_ADDR_CHECKS_LEN};
 
 // track msgs coming from OP so that we know what CAM msgs to drop and what to forward
-static int wuling_rx_hook(CANPacket_t *to_push)
+static void wuling_rx_hook(const CANPacket_t *to_push)
 {
-  bool valid = addr_safety_check(to_push, &wuling_rx_checks, NULL, NULL, NULL, NULL);
-  if (valid && ((int)GET_BUS(to_push) == BUS_MAIN))
+  if (((int)GET_BUS(to_push) == BUS_MAIN))
   {
     int addr = GET_ADDR(to_push);
 
@@ -90,20 +86,14 @@ static int wuling_rx_hook(CANPacket_t *to_push)
     generic_rx_checks((addr == STEERING_LKAS));
   }
   controls_allowed = true;
-  return valid;
 }
 
-static int wuling_tx_hook(CANPacket_t *to_send)
+static bool wuling_tx_hook(const CANPacket_t *to_send)
 {
 
-  int tx = 1;
+  bool tx = true;
   int addr = GET_ADDR(to_send);
   int bus = GET_BUS(to_send);
-
-  if (!msg_allowed(to_send, WULING_TX_MSGS, sizeof(WULING_TX_MSGS) / sizeof(WULING_TX_MSGS[0])))
-  {
-    tx = 0;
-  }
 
   // Check if msg is sent on the main BUS
   if (bus == BUS_MAIN)
@@ -170,16 +160,15 @@ static int wuling_fwd_hook(int bus, int addr)
   return bus_fwd;
 }
 
-static const addr_checks *wuling_init(uint16_t param)
+static safety_config wuling_init(uint16_t param)
 {
   UNUSED(param);
-  return &wuling_rx_checks;
+  return BUILD_SAFETY_CFG(wuling_rx_checks, WULING_TX_MSGS);
 }
 
 const safety_hooks wuling_hooks = {
     .init = wuling_init,
     .rx = wuling_rx_hook,
     .tx = wuling_tx_hook,
-    .tx_lin = nooutput_tx_lin_hook,
     .fwd = wuling_fwd_hook,
 };
