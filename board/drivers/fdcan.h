@@ -35,11 +35,6 @@ bool can_set_speed(uint8_t can_number) {
   return ret;
 }
 
-void can_set_gmlan(uint8_t bus) {
-  UNUSED(bus);
-  print("GMLAN not available on red panda\n");
-}
-
 void update_can_health_pkt(uint8_t can_number, uint32_t ir_reg) {
   FDCAN_GlobalTypeDef *FDCANx = CANIF_FROM_CAN_NUM(can_number);
   uint32_t psr_reg = FDCANx->PSR;
@@ -131,7 +126,7 @@ void process_can(uint8_t can_number) {
           to_push.rejected = 0U;
           to_push.extended = to_send.extended;
           to_push.addr = to_send.addr;
-          to_push.bus = to_send.bus;
+          to_push.bus = bus_number;
           to_push.data_len_code = to_send.data_len_code;
           (void)memcpy(to_push.data, to_send.data, dlc_to_len[to_push.data_len_code]);
           can_set_checksum(&to_push);
