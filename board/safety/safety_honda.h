@@ -99,7 +99,8 @@ bool honda_fwd_brake = false;
 bool honda_bosch_long = false;
 bool honda_bosch_radarless = false;
 bool honda_clarity_brake_msg = false;
-enum {HONDA_NIDEC, HONDA_BOSCH} honda_hw = HONDA_NIDEC;
+typedef enum {HONDA_NIDEC, HONDA_BOSCH} HondaHw;
+HondaHw honda_hw = HONDA_NIDEC;
 
 
 int honda_get_pt_bus(void) {
