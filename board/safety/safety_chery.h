@@ -14,6 +14,15 @@
 #define CHERY_AUX 1U
 #define CHERY_CAM 2U
 
+static bool lkas_msg_check(int addr)
+{
+  return (addr == CHERY_LKAS);
+}
+
+const uint16_t CHERY_PARAM_LONGITUDINAL = 1;
+
+bool chery_longitudinal = false;
+
 const SteeringLimits CHERY_STEERING_LIMITS = {
     .max_steer = 800,
     .max_rate_up = 10,
@@ -26,6 +35,13 @@ const SteeringLimits CHERY_STEERING_LIMITS = {
 };
 
 const CanMsg CHERY_TX_MSGS[] = {
+    {CHERY_LKAS, 0, 8},
+    {CHERY_LKAS_HUD, 0, 8},
+    {CHERY_STEER_BUTTON, 0, 8},
+    {CHERY_STEER_BUTTON, 2, 8},
+};
+
+const CanMsg CHERY_LONG_TX_MSGS[] = {
     {CHERY_ACC, 0, 8},
     {CHERY_LKAS, 0, 8},
     {CHERY_LKAS_HUD, 0, 8},
@@ -116,14 +132,18 @@ static int chery_fwd_hook(int bus, int addr)
     // bool block = (addr == CHERY_LKAS) || (addr == CHERY_ACC) || (addr == CHERY_LKAS_HUD) || (addr == CHERY_LKAS_CMD) || (addr == 0x387) || (addr == 0x3fc) || (addr == CHERY_ACC_DATA);
     // bool block = (addr == CHERY_LKAS) || (addr == CHERY_ACC) || (addr == CHERY_LKAS_HUD) || (addr == CHERY_LKAS_HUD) || (addr == 0x345);
     // bool block = (addr == CHERY_LKAS) || (addr == CHERY_ACC) || (addr == CHERY_LKAS_HUD) || (addr == CHERY_LKAS_HUD) || (addr == 0x345) || (addr == 0x3dc) || (addr == 0x3de) || (addr == 0x3ed) || (addr == 0x3fa) || (addr == 0x4dd);
-    bool block = (addr == CHERY_LKAS) || (addr == CHERY_ACC);
+    // bool block = (addr == CHERY_LKAS);
     // --|| (addr != CHERY_ACC) || (addr != CHERY_LKAS_HUD) || (addr != 0x387) || (addr != CHERY_ACC_DATA);
-    if (!block)
+    if (lkas_msg_check(addr) || (chery_longitudinal && (addr == CHERY_ACC)))
     {
-      bus_fwd = CHERY_MAIN;
+      bus_fwd = -1;
       // print("  Address: 0x");
       // puth(addr);
       // print("\n");
+    }
+    else
+    {
+      bus_fwd = CHERY_MAIN;
     }
   }
   else
@@ -137,7 +157,12 @@ static int chery_fwd_hook(int bus, int addr)
 static safety_config chery_init(uint16_t param)
 {
   UNUSED(param);
-  return BUILD_SAFETY_CFG(chery_rx_checks, CHERY_TX_MSGS);
+#ifdef ALLOW_DEBUG
+  chery_longitudinal = GET_FLAG(param, CHERY_PARAM_LONGITUDINAL);
+#endif
+  safety_config ret;
+  ret = chery_longitudinal ? BUILD_SAFETY_CFG(chery_rx_checks, CHERY_LONG_TX_MSGS) : BUILD_SAFETY_CFG(chery_rx_checks, CHERY_TX_MSGS);
+  return ret;
 }
 
 const safety_hooks chery_hooks = {

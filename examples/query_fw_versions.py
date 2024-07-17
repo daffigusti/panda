@@ -72,9 +72,9 @@ if __name__ == "__main__":
       else:
         bus = 1 if panda.has_obd() else 0
       rx_addr = addr + int(args.rxoffset, base=16) if args.rxoffset else None
-
       # Try all sub-addresses for addr. By default, this is None
       for sub_addr in sub_addrs:
+        
         sub_addr_str = hex(sub_addr) if sub_addr is not None else None
         t.set_description(f"{hex(addr)}, {sub_addr_str}")
         uds_client = UdsClient(panda, addr, rx_addr, bus, sub_addr=sub_addr, timeout=0.2, debug=args.debug)
@@ -96,6 +96,8 @@ if __name__ == "__main__":
         # non-standardized identifier ranges if requested
         resp = {}
         for uds_data_id in sorted(uds_data_ids):
+          # print(uds_data_ids)
+
           try:
             data = uds_client.read_data_by_identifier(uds_data_id)  # type: ignore
             if data:
@@ -111,6 +113,7 @@ if __name__ == "__main__":
         sub_addr_str = f", sub-address 0x{sub_addr:X}" if sub_addr is not None else ""
         print(f"\n\n*** Results for address 0x{addr:X}{sub_addr_str} ***\n\n")
         for rid, dat in resp.items():
+          print(rid)
           print(f"0x{rid:02X} {uds_data_ids[rid]}: {dat}")
     else:
       print("no fw versions found!")

@@ -241,6 +241,8 @@ class Panda:
 
   FLAG_TOYOTA_MADS_LTA_MSG = 1
 
+  FLAG_CHERY_LONG_CONTROL = 1
+
   def __init__(self, serial: str | None = None, claim: bool = True, disable_checks: bool = True, can_speed_kbps: int = 500):
     self._connect_serial = serial
     self._disable_checks = disable_checks
