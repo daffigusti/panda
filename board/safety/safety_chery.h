@@ -93,6 +93,7 @@ static void chery_rx_hook(const CANPacket_t *to_push)
     generic_rx_checks((addr == CHERY_LKAS));
   }
   controls_allowed = true;
+  controls_allowed_long = true;
 }
 
 static bool chery_tx_hook(const CANPacket_t *to_send)

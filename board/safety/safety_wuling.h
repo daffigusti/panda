@@ -15,17 +15,17 @@
 #define BUS_CAM 2
 
 const SteeringLimits WULING_STEERING_LIMITS = {
-  .max_steer = 200,
-  .max_rate_up = 3,
-  .max_rate_down = 2,
-  .driver_torque_allowance = 35,
-  .driver_torque_factor = 2,
-  .max_rt_delta = 128,
-  .max_rt_interval = 250000,
-  .type = TorqueDriverLimited,
+    .max_steer = 200,
+    .max_rate_up = 3,
+    .max_rate_down = 2,
+    .driver_torque_allowance = 35,
+    .driver_torque_factor = 2,
+    .max_rt_delta = 128,
+    .max_rt_interval = 250000,
+    .type = TorqueDriverLimited,
 };
 
-const CanMsg WULING_TX_MSGS[] = {{STEERING_LKAS, 0, 8}, {CRZ_BTN, 0, 8}, {CRZ_BTN, 2, 8},  {LKAS_HUD, 0, 8}, {CRZ_CTRL, 0, 8}, {CRZ_CTRL, 2, 8}, {ACC_STS, 0, 8}, {ACC_CMD, 0, 8}};
+const CanMsg WULING_TX_MSGS[] = {{STEERING_LKAS, 0, 8}, {CRZ_BTN, 0, 8}, {CRZ_BTN, 2, 8}, {LKAS_HUD, 0, 8}, {CRZ_CTRL, 0, 8}, {CRZ_CTRL, 2, 8}, {ACC_STS, 0, 8}, {ACC_CMD, 0, 8}};
 
 RxCheck wuling_rx_checks[] = {
     {.msg = {{CRZ_BTN, 0, 8, .frequency = 50U}, {0}, {0}}},
@@ -41,7 +41,7 @@ static void wuling_rx_hook(const CANPacket_t *to_push)
   {
     int addr = GET_ADDR(to_push);
 
-    //speed data
+    // speed data
     if (addr == 840)
     {
       // sample speed: scale by 0.01 to get kph
@@ -49,7 +49,7 @@ static void wuling_rx_hook(const CANPacket_t *to_push)
       vehicle_moving = speed > 10; // moving when speed > 0.1 kph
     }
 
-    //torque driver data
+    // torque driver data
     if (addr == 485)
     {
       int torque_driver_new = GET_BYTE(to_push, 6);
@@ -57,23 +57,24 @@ static void wuling_rx_hook(const CANPacket_t *to_push)
       update_sample(&torque_driver, torque_driver_new);
     }
 
-    //brake data
+    // brake data
     if (addr == 201)
     {
       brake_pressed = GET_BIT(to_push, 40U) != 0U;
     }
 
-    //gas data
+    // gas data
     if (addr == 401)
     {
       gas_pressed = GET_BYTE(to_push, 6) != 0U;
     }
 
-    //cruize data
+    // cruize data
     if ((addr == 611))
     {
       bool cruise_available = (GET_BYTE(to_push, 4) >> 6) != 0U;
-      if (!cruise_available) {
+      if (!cruise_available)
+      {
         // lateral_controls_allowed = false;
       }
 
@@ -86,6 +87,7 @@ static void wuling_rx_hook(const CANPacket_t *to_push)
     generic_rx_checks((addr == STEERING_LKAS));
   }
   controls_allowed = true;
+  controls_allowed_long = true;
 }
 
 static bool wuling_tx_hook(const CANPacket_t *to_send)
@@ -137,7 +139,8 @@ static int wuling_fwd_hook(int bus, int addr)
   if (bus == BUS_MAIN)
   {
     bool block_msg = (addr == 00);
-    if (!block_msg) {
+    if (!block_msg)
+    {
       bus_fwd = BUS_CAM;
     }
   }
@@ -146,7 +149,7 @@ static int wuling_fwd_hook(int bus, int addr)
     // bool block = (addr == STEERING_LKAS) || (addr == ACC_CMD);
     bool is_lkas_msg = (addr == LKAS_HUD);
     bool is_acc_md = (addr == ACC_CMD);
-    bool block = (addr == STEERING_LKAS) || is_lkas_msg || (addr == CRZ_CTRL) || is_acc_md; 
+    bool block = (addr == STEERING_LKAS) || is_lkas_msg || (addr == CRZ_CTRL) || is_acc_md;
     if (!block)
     {
       bus_fwd = BUS_MAIN;
