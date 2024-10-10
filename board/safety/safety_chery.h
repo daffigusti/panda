@@ -1,10 +1,14 @@
 // CAN msgs we care about
-#define CHERY_ACC 0x3A2
+#define CHERY_ACC_CMD 0x3A2
+#define CHERY_ACC_STATUS 0x3A5
 #define CHERY_LKAS_HUD 0x307
-#define CHERY_LKAS 0x345
+#define CHERY_LKAS_CMD 0x345
+#define CHERY_ACC_SETTING 0x387
+#define CHERY_HUD_ALERT 0x3FC
+
 #define CHERY_ENGINE 0x3E
 #define CHERY_BRAKE 0x29A
-
+#define CHERY_BRAKE_SENSOR 0x4ED
 #define CHERY_WHEEL_SENSOR 0x316 // RX for vehicle speed
 #define CHERY_ACC_DATA 0x3A5
 #define CHERY_STEER_BUTTON 0x360
@@ -16,7 +20,7 @@
 
 static bool lkas_msg_check(int addr)
 {
-  return (addr == CHERY_LKAS);
+  return (addr == CHERY_LKAS_CMD) || (addr == CHERY_LKAS_HUD);
 }
 
 const uint16_t CHERY_PARAM_LONGITUDINAL = 1;
@@ -35,25 +39,29 @@ const SteeringLimits CHERY_STEERING_LIMITS = {
 };
 
 const CanMsg CHERY_TX_MSGS[] = {
-    {CHERY_LKAS, 0, 8},
+    {CHERY_LKAS_CMD, 0, 8},
     {CHERY_LKAS_HUD, 0, 8},
-    {CHERY_STEER_BUTTON, 0, 8},
-    {CHERY_STEER_BUTTON, 2, 8},
+    {CHERY_HUD_ALERT, 0, 8},
+    {CHERY_ACC_SETTING, 0, 8},
+    {CHERY_STEER_BUTTON, 0, 6},
+    {CHERY_STEER_BUTTON, 2, 6},
 };
 
 const CanMsg CHERY_LONG_TX_MSGS[] = {
-    {CHERY_ACC, 0, 8},
-    {CHERY_LKAS, 0, 8},
+    {CHERY_ACC_CMD, 0, 8},
+    {CHERY_LKAS_CMD, 0, 8},
     {CHERY_LKAS_HUD, 0, 8},
-    {CHERY_STEER_BUTTON, 0, 8},
-    {CHERY_STEER_BUTTON, 2, 8},
+    {CHERY_HUD_ALERT, 0, 8},
+    {CHERY_ACC_SETTING, 0, 8},
+    {CHERY_STEER_BUTTON, 0, 6},
+    {CHERY_STEER_BUTTON, 2, 6},
 };
 
 RxCheck chery_rx_checks[] = {
     {.msg = {{CHERY_WHEEL_SENSOR, CHERY_MAIN, 8, .frequency = 50U}, {0}, {0}}},
     {.msg = {{CHERY_ENGINE, CHERY_MAIN, 48, .frequency = 100U}, {0}, {0}}},
     {.msg = {{CHERY_BRAKE, CHERY_MAIN, 8, .frequency = 50U}, {0}, {0}}},
-    // {.msg = {{CHERY_ACC_DATA, CHERY_MAIN, 8, .frequency = 50U}, {0}, {0}}},
+    {.msg = {{CHERY_BRAKE_SENSOR, CHERY_MAIN, 8, .frequency = 10U}, {0}, {0}}},
 };
 
 // track msgs coming from OP so that we know what CAM msgs to drop and what to forward
@@ -135,7 +143,7 @@ static int chery_fwd_hook(int bus, int addr)
     // bool block = (addr == CHERY_LKAS) || (addr == CHERY_ACC) || (addr == CHERY_LKAS_HUD) || (addr == CHERY_LKAS_HUD) || (addr == 0x345) || (addr == 0x3dc) || (addr == 0x3de) || (addr == 0x3ed) || (addr == 0x3fa) || (addr == 0x4dd);
     // bool block = (addr == CHERY_LKAS);
     // --|| (addr != CHERY_ACC) || (addr != CHERY_LKAS_HUD) || (addr != 0x387) || (addr != CHERY_ACC_DATA);
-    if (lkas_msg_check(addr) || (chery_longitudinal && (addr == CHERY_ACC)))
+    if (lkas_msg_check(addr) || (chery_longitudinal && (addr == CHERY_ACC_CMD)))
     {
       bus_fwd = -1;
       // print("  Address: 0x");
