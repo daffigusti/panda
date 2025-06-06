@@ -13,6 +13,7 @@ classifiers = [
 ]
 dependencies = [
   "libusb1",
+    "opendbc @ git+https://github.com/sunnypilot/opendbc.git@80c0b4203af04ffdf008adf868162fd0b705ae2c#egg=opendbc",
 ]
 
 [project.optional-dependencies]
@@ -28,9 +29,8 @@ dev = [
   "pytest-randomly",
   "ruff",
   "mypy",
-  "spidev",
   "setuptools",
-  "opendbc @ git+https://github.com/sunnypilot/opendbc.git@462d16e4c6bd1d65d434adf38d3264b801632584#egg=opendbc",
+  "spidev; platform_system == 'Linux'",
 ]
 
 [build-system]
